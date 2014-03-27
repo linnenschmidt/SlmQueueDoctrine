@@ -1,47 +1,22 @@
 {
-    "name": "slm/queue-doctrine",
-    "description": "Zend Framework 2 module that integrates Doctrine as queuing system",
-    "license": "BSD-3-Clause",
+    "name": "slm/queue-doctrine-odm",
+    "description": "Zend Framework 2 module that integrates DoctrineODM as queuing system",
     "type": "library",
     "keywords": [
         "zf2",
         "queue",
         "job",
         "doctrine",
+        "doctrineodm",
+        "mongodb",
         "db",
         "database"
     ],
-    "homepage": "https://github.com/juriansluiman/SlmQueueDoctrine",
-    "authors": [
-        {
-            "name": "Stefan Kleff",
-            "email": "s.kleff@goalio.de",
-            "homepage": "http://www.goalio.de"
-        }
-    ],
+    "homepage": "https://github.com/linnenschmidt/SlmQueueDoctrineODM",
     "require": {
         "php": ">=5.3.3",
-        "zendframework/zend-config": "~2.2",
-        "zendframework/zend-mvc": "~2.2",
-        "zendframework/zend-servicemanager": "~2.2",
-        "zendframework/zend-stdlib": "~2.2",
-        "slm/queue": "0.3.0-beta1",
-        "doctrine/doctrine-orm-module":  "~0.7"
-    },
-    "require-dev": {
-        "zendframework/zendframework": "2.*"
-    },
-    "extra": {
-        "branch-alias": {
-            "dev-master": "0.3.x-dev"
-        }
-    },
-    "autoload": {
-        "psr-0": {
-            "SlmQueueDoctrine": "src/"
-        },
-        "classmap": [
-            "./Module.php"
-        ]
+        "zendframework/zendframework": "2.*",
+        "doctrine/doctrine-mongo-odm-module": "dev-master",
+        "slm/queue": ">=0.3.0-dev"
     }
 }

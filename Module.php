@@ -1,20 +1,19 @@
 <?php
 
-namespace SlmQueueDoctrine;
+namespace SlmQueueDoctrineODM;
 
 use Zend\Loader;
 use Zend\Console\Adapter\AdapterInterface;
 use Zend\ModuleManager\Feature;
 
 /**
- * SlmQueueDoctrine
+ * SlmQueueDoctrineODM
  */
 class Module implements
     Feature\AutoloaderProviderInterface,
     Feature\ConfigProviderInterface,
     Feature\ConsoleBannerProviderInterface,
-    Feature\ConsoleUsageProviderInterface,
-    Feature\DependencyIndicatorInterface
+    Feature\ConsoleUsageProviderInterface
 {
     /**
      * {@inheritDoc}
@@ -43,7 +42,7 @@ class Module implements
      */
     public function getConsoleBanner(AdapterInterface $console)
     {
-        return 'SlmQueueDoctrine';
+        return 'SlmQueueDoctrineODM ' . Version::VERSION;
     }
 
     /**
@@ -52,8 +51,8 @@ class Module implements
     public function getConsoleUsage(AdapterInterface $console)
     {
         return array(
-            'queue doctrine <queueName> --start' => 'Process the jobs',
-            'queue doctrine <queueName> --recover [--executionTime=]' => 'Recover long running jobs',
+            'queue doctrine-odm <queueName> --start' => 'Process the jobs',
+            'queue doctrine-odm <queueName> --recover [--executionTime=]' => 'Recover long running jobs',
 
             array('<queueName>', 'Queue\'s name to process'),
             array('<executionTime>', 'Time (in minutes) after which the job gets recovered'),
@@ -61,10 +60,15 @@ class Module implements
     }
 
     /**
-     * {@inheritDoc}
+     * This ModuleManager feature was introduced in ZF 2.1 to check if all the dependencies needed by a module
+     * were correctly loaded. However, as we want to keep backward-compatibility with ZF 2.0, please DO NOT
+     * explicitely implement Zend\ModuleManager\Feature\DependencyIndicatorInterface. Just write this method and
+     * the module manager will automatically call it
+     *
+     * @return array
      */
     public function getModuleDependencies()
     {
-        return array('DoctrineORMModule', 'SlmQueue');
+        return array('DoctrineModule', 'DoctrineMongoODMModule', 'SlmQueue');
     }
 }
