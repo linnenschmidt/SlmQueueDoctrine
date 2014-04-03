@@ -18,5 +18,13 @@
         "zendframework/zendframework": "2.*",
         "doctrine/doctrine-mongo-odm-module": "dev-master",
         "slm/queue": ">=0.3.0-dev"
+    },
+    "autoload": {
+        "psr-0": {
+            "SlmQueueDoctrineODM": "src/"
+        },
+        "classmap": [
+            "./Module.php"
+        ]
     }
 }
