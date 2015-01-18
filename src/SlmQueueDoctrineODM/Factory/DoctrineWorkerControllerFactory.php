@@ -2,14 +2,14 @@
 
 namespace SlmQueueDoctrineODM\Factory;
 
-use SlmQueueDoctrineODM\Controller\DoctrineODMWorkerController;
+use SlmQueueDoctrineODM\Controller\DoctrineWorkerController;
 use Zend\ServiceManager\FactoryInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
 
 /**
  * WorkerFactory
  */
-class DoctrineODMWorkerControllerFactory implements FactoryInterface
+class DoctrineWorkerControllerFactory implements FactoryInterface
 {
     /**
      * {@inheritDoc}
@@ -17,8 +17,8 @@ class DoctrineODMWorkerControllerFactory implements FactoryInterface
     public function createService(ServiceLocatorInterface $serviceLocator)
     {
         $worker = $serviceLocator->getServiceLocator()
-                                 ->get('SlmQueueDoctrineODM\Worker\DoctrineODMWorker');
+                                 ->get('SlmQueueDoctrineODM\Worker\DoctrineWorker');
 
-        return new DoctrineODMWorkerController($worker);
+        return new DoctrineWorkerController($worker);
     }
 }

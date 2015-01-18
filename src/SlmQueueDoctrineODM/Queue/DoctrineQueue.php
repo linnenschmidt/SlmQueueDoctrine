@@ -12,7 +12,7 @@ use SlmQueue\Job\JobInterface;
 use SlmQueue\Job\JobPluginManager;
 use SlmQueueDoctrineODM\Exception;
 
-class DoctrineODMQueue extends AbstractQueue implements DoctrineODMQueueInterface
+class DoctrineQueue extends AbstractQueue implements DoctrineQueueInterface
 {
     const STATUS_PENDING = 1;
     const STATUS_RUNNING = 2;
@@ -125,7 +125,7 @@ class DoctrineODMQueue extends AbstractQueue implements DoctrineODMQueueInterfac
     /**
      * {@inheritDoc}
      *
-     * Note : see DoctrineODMQueue::parseOptionsToDateTime for schedule and delay options
+     * Note : see DoctrineQueue::parseOptionsToDateTime for schedule and delay options
      */
     public function push(JobInterface $job, array $options = array())
     {
@@ -297,7 +297,7 @@ class DoctrineODMQueue extends AbstractQueue implements DoctrineODMQueueInterfac
     /**
      * Reschedules a specific running job
      *
-     * Note : see DoctrineODMQueue::parseOptionsToDateTime for schedule and delay options
+     * Note : see DoctrineQueue::parseOptionsToDateTime for schedule and delay options
      *
      * @param  JobInterface             $job
      * @param  array                    $options

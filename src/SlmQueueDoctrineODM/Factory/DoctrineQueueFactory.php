@@ -4,12 +4,12 @@ namespace SlmQueueDoctrineODM\Factory;
 
 use Zend\ServiceManager\FactoryInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
-use SlmQueueDoctrineODM\Queue\DoctrineODMQueue;
+use SlmQueueDoctrineODM\Queue\DoctrineQueue;
 
 /**
- * DoctrineODMQueueFactory
+ * DoctrineQueueFactory
  */
-class DoctrineODMQueueFactory implements FactoryInterface
+class DoctrineQueueFactory implements FactoryInterface
 {
     /**
      * {@inheritDoc}
@@ -18,15 +18,15 @@ class DoctrineODMQueueFactory implements FactoryInterface
     {
         $parentLocator = $serviceLocator->getServiceLocator();
 
-        /** @var $DoctrineODMOptions \SlmQueueDoctrineODM\Options\DoctrineODMOptions */
-        $DoctrineODMOptions = $parentLocator->get('SlmQueueDoctrineODM\Options\DoctrineODMOptions');
+        /** @var $DoctrineOptions \SlmQueueDoctrineODM\Options\DoctrineOptions */
+        $DoctrineOptions = $parentLocator->get('SlmQueueDoctrineODM\Options\DoctrineOptions');
 
         /** @var $dm \Doctrine\ODM\MongoDB\DocumentManager */
-        $documentManager  = $parentLocator->get($DoctrineODMOptions->getDocumentManager());
-        $document         = $DoctrineODMOptions->getDocument();
+        $documentManager  = $parentLocator->get($DoctrineOptions->getDocumentManager());
+        $document         = $DoctrineOptions->getDocument();
         $jobPluginManager = $parentLocator->get('SlmQueue\Job\JobPluginManager');
 
-        $queue = new DoctrineODMQueue($documentManager, $document, $requestedName, $jobPluginManager);
+        $queue = new DoctrineQueue($documentManager, $document, $requestedName, $jobPluginManager);
 
         $config = $parentLocator->get('Config');
         $options = isset($config['slm_queue']['queues'][$requestedName]) ? $config['slm_queue']['queues'][$requestedName] : array();
@@ -35,8 +35,8 @@ class DoctrineODMQueueFactory implements FactoryInterface
             $queue->setSleepWhenIdle($options['sleep_when_idle']);
         }
 
-        $queue->setBuriedLifetime($DoctrineODMOptions->getBuriedLifetime());
-        $queue->setDeletedLifetime($DoctrineODMOptions->getDeletedLifetime());
+        $queue->setBuriedLifetime($DoctrineOptions->getBuriedLifetime());
+        $queue->setDeletedLifetime($DoctrineOptions->getDeletedLifetime());
 
         return $queue;
     }
