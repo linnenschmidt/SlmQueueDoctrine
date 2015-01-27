@@ -2,10 +2,11 @@
 
 namespace SlmQueueDoctrineODM\Controller;
 
-use SlmQueueDoctrineODM\Queue\DoctrineQueueInterface;
-use SlmQueue\Controller\Exception\WorkerProcessException;
+
 use SlmQueue\Controller\AbstractWorkerController;
+use SlmQueue\Controller\Exception\WorkerProcessException;
 use SlmQueue\Exception\ExceptionInterface;
+use SlmQueueDoctrineODM\Queue\DoctrineQueueInterface;
 
 /**
  * Worker controller

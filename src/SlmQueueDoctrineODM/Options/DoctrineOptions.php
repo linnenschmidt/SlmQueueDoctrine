@@ -15,14 +15,14 @@ class DoctrineOptions extends AbstractOptions
      *
      * @var string
      */
-    protected $dm;
+    protected $documentManager = 'doctrine.documentmanager.odm_default';
 
     /**
      * Document which should be used to store jobs
      *
      * @var string
      */
-    protected $document;
+    protected $document = 'SlmQueueDoctrineODM\Document\QueueDefault';
 
     /**
      * how long to keep deleted (successful) jobs (in minutes)
@@ -46,7 +46,7 @@ class DoctrineOptions extends AbstractOptions
      */
     public function setDocumentManager($documentManager)
     {
-        $this->dm = $documentManager;
+        $this->documentManager = $documentManager;
     }
 
     /**
@@ -56,7 +56,7 @@ class DoctrineOptions extends AbstractOptions
      */
     public function getDocumentManager()
     {
-        return $this->dm;
+        return $this->documentManager;
     }
 
     /**

@@ -2,15 +2,16 @@
 
 namespace SlmQueueDoctrineODM\Queue;
 
+use DateInterval;
 use DateTime;
 use DateTimeZone;
-use DateInterval;
 use MongoDate;
 use Doctrine\ODM\MongoDB\DocumentManager;
-use SlmQueue\Queue\AbstractQueue;
 use SlmQueue\Job\JobInterface;
 use SlmQueue\Job\JobPluginManager;
+use SlmQueue\Queue\AbstractQueue;
 use SlmQueueDoctrineODM\Exception;
+use SlmQueueDoctrineODM\Options\DoctrineOptions;
 
 class DoctrineQueue extends AbstractQueue implements DoctrineQueueInterface
 {
@@ -28,98 +29,38 @@ class DoctrineQueue extends AbstractQueue implements DoctrineQueueInterface
     protected $dm;
 
     /**
-     * How long to keep deleted (successful) jobs (in minutes)
+     * Options for this queue
      *
-     * @var int
+     * @var DoctrineOptions $options
      */
-    protected $deletedLifetime;
-
-    /**
-     * How long to keep buried (failed) jobs (in minutes)
-     *
-     * @var int
-     */
-    protected $buriedLifetime;
-
-    /**
-     * How long show we sleep when no jobs available for processing (in seconds)
-     *
-     * @var int
-     */
-    protected $sleepWhenIdle = 1;
-
-    /**
-     * Document class which should be used
-     *
-     * @var string
-     */
-    protected $document;
+    protected $options;
 
     /**
      * Constructor
      *
      * @param DocumentManager  $documentManager
-     * @param string           $document
+     * @param DoctrineOptions  $options
      * @param string           $name
      * @param JobPluginManager $jobPluginManager
      */
-    public function __construct(DocumentManager $documentManager, $document, $name, JobPluginManager $jobPluginManager)
-    {
+    public function __construct(
+        DocumentManager $documentManager,
+        DoctrineOptions $options,
+        $name,
+        JobPluginManager $jobPluginManager
+    ) {
         $this->dm = $documentManager;
-        $this->document  = $document;
-
-        $this->deletedLifetime = static::LIFETIME_DISABLED;
-        $this->buriedLifetime  = static::LIFETIME_DISABLED;
+        $this->options  = clone $options;
 
         parent::__construct($name, $jobPluginManager);
     }
 
     /**
-     * @param int $buriedLifetime
+     * @return DoctrineOptions
      */
-    public function setBuriedLifetime($buriedLifetime)
+    public function getOptions()
     {
-        $this->buriedLifetime = (int) $buriedLifetime;
-    }
-
-    /**
-     * @param int
-     */
-    public function getBuriedLifetime()
-    {
-        return $this->buriedLifetime;
-    }
-
-    /**
-     * @param int $deletedLifetime
-     */
-    public function setDeletedLifetime($deletedLifetime)
-    {
-        $this->deletedLifetime = (int) $deletedLifetime;
-    }
-
-    /**
-     * @param int
-     */
-    public function getDeletedLifetime()
-    {
-        return $this->deletedLifetime;
-    }
-
-    /**
-     * @param int $sleepWhenIdle
-     */
-    public function setSleepWhenIdle($sleepWhenIdle)
-    {
-        $this->sleepWhenIdle = (int) $sleepWhenIdle;
-    }
-
-    /**
-     * @return int
-     */
-    public function getSleepWhenIdle()
-    {
-        return $this->sleepWhenIdle;
+        return $this->options;
     }
 
     /**
@@ -131,20 +72,21 @@ class DoctrineQueue extends AbstractQueue implements DoctrineQueueInterface
     {
         $scheduled = $this->parseOptionsToDateTime($options);
 
-        $task = new $this->document();
+        $queueClassName = $this->options->getDocument();
+        $queue = new $queueClassName;
 
-        $task->setQueue($this->getName());
-        $task->setStatus(self::STATUS_PENDING);
-        $task->setCreated(new MongoDate);
-        $task->setData($job->jsonSerialize());
-        $task->setScheduled($scheduled);
+        $queue->setQueue($this->getName());
+        $queue->setStatus(self::STATUS_PENDING);
+        $queue->setCreated(new MongoDate);
+        $queue->setData($this->serializeJob($job));
+        $queue->setScheduled($scheduled);
 
-        $this->dm->persist($task);
+        $this->dm->persist($queue);
 
         $this->dm->flush();
         $this->dm->clear();
 
-        $job->setId($task->getId());
+        $job->setId($queue->getId());
     }
 
     /**
@@ -156,7 +98,7 @@ class DoctrineQueue extends AbstractQueue implements DoctrineQueueInterface
         $this->purge();
 
         try {
-            $document =  $this->dm->createQueryBuilder( $this->document )
+            $document =  $this->dm->createQueryBuilder( $this->options->getDocument() )
                 ->findAndUpdate()
                 ->returnNew()
                 ->field('status')->equals(static::STATUS_PENDING)
@@ -175,16 +117,11 @@ class DoctrineQueue extends AbstractQueue implements DoctrineQueueInterface
         }
 
         if (is_null($document)) {
-            sleep($this->sleepWhenIdle);
-
             return null;
         }
 
-        $data = json_decode($document->data, true);
         // Add job ID to meta data
-        $data['metadata']['id'] = $document->id;
-
-        return $this->createJob($data['class'], $data['content'], $data['metadata']);
+        return $this->unserializeJob($document->data, array('__id__' => $document->id));
     }
 
     /**
@@ -194,14 +131,14 @@ class DoctrineQueue extends AbstractQueue implements DoctrineQueueInterface
      */
     public function delete(JobInterface $job, array $options = array())
     {
-        if ($this->getDeletedLifetime() === static::LIFETIME_DISABLED) {
-            $this->dm->createQueryBuilder( $this->document )
+        if ($this->options->getDeletedLifetime() === static::LIFETIME_DISABLED) {
+            $this->dm->createQueryBuilder( $this->options->getDocument() )
                 ->remove()
                 ->field('id')->equals($job->getId())
 
                 ->getQuery()->execute();
         } else {
-            $document =  $this->dm->createQueryBuilder( $this->document )
+            $document =  $this->dm->createQueryBuilder( $this->options->getDocument() )
                 ->findAndUpdate()
                 ->field('id')->equals($job->getId())
                 ->field('status')->equals(static::STATUS_RUNNING)
@@ -222,8 +159,8 @@ class DoctrineQueue extends AbstractQueue implements DoctrineQueueInterface
      */
     public function bury(JobInterface $job, array $options = array())
     {
-        if ($this->getBuriedLifetime() === static::LIFETIME_DISABLED) {
-            $this->dm->createQueryBuilder( $this->document )
+        if ($this->options->getBuriedLifetime() === static::LIFETIME_DISABLED) {
+            $this->dm->createQueryBuilder( $this->options->getDocument() )
                 ->remove()
                 ->field('id')->equals($job->getId())
 
@@ -232,7 +169,7 @@ class DoctrineQueue extends AbstractQueue implements DoctrineQueueInterface
             $message = isset($options['message']) ? $options['message'] : null;
             $trace   = isset($options['trace']) ? $options['trace'] : null;
 
-            $this->dm->createQueryBuilder( $this->document )
+            $this->dm->createQueryBuilder( $this->options->getDocument() )
                 ->findAndUpdate()
                 ->field('id')->equals($job->getId())
                 ->field('status')->equals(static::STATUS_RUNNING)
@@ -255,7 +192,7 @@ class DoctrineQueue extends AbstractQueue implements DoctrineQueueInterface
     {
         $executedLifetime = $this->parseOptionsToDateTime(array('delay' => - ($executionTime * 60)));
 
-        $documents = $this->dm->createQueryBuilder( $this->document )
+        $documents = $this->dm->createQueryBuilder( $this->options->getDocument() )
             ->update()
             ->multiple(true)
             ->field('executed')->lt($executedLifetime)
@@ -279,7 +216,7 @@ class DoctrineQueue extends AbstractQueue implements DoctrineQueueInterface
      */
     public function peek($id)
     {
-        $document = $this->dm->getRepository( $this->document )->find($id);
+        $document = $this->dm->getRepository( $this->options->getDocument() )->find($id);
 
         $this->dm->clear();
 
@@ -287,11 +224,8 @@ class DoctrineQueue extends AbstractQueue implements DoctrineQueueInterface
             throw new Exception\JobNotFoundException(sprintf("Job with id '%s' does not exists.", $id));
         }
 
-        $data = json_decode($document->data, true);
         // Add job ID to meta data
-        $data['metadata']['id'] = $document->id;
-
-        return $this->createJob($data['class'], $data['content'], $data['metadata']);
+        return $this->unserializeJob($document->data, array('__id__' => $document->id));
     }
 
     /**
@@ -307,7 +241,7 @@ class DoctrineQueue extends AbstractQueue implements DoctrineQueueInterface
     {
         $scheduled = $this->parseOptionsToDateTime($options);
 
-        $document =  $this->dm->createQueryBuilder( $this->document )
+        $document =  $this->dm->createQueryBuilder( $this->options->getDocument() )
             ->findAndUpdate()
             ->field('id')->equals($job->getId())
             ->field('status')->equals(static::STATUS_RUNNING)
@@ -315,7 +249,7 @@ class DoctrineQueue extends AbstractQueue implements DoctrineQueueInterface
             ->field('status')->set(static::STATUS_PENDING)
             ->field('finished')->set(new MongoDate)
             ->field('scheduled')->set($scheduled)
-            ->field('data')->set($job->jsonSerialize())
+            ->field('data')->set($this->serializeJob($job))
 
             ->getQuery()->execute();
 
@@ -351,8 +285,10 @@ class DoctrineQueue extends AbstractQueue implements DoctrineQueueInterface
         if (isset($options['scheduled'])) {
             switch (true) {
                 case is_numeric($options['scheduled']):
-                    $scheduled = new DateTime(sprintf("@%d", (int) $options['scheduled']),
-                        new DateTimeZone(date_default_timezone_get()));
+                    $scheduled = new DateTime(
+                        sprintf("@%d", (int) $options['scheduled']),
+                        new DateTimeZone(date_default_timezone_get())
+                    );
                     break;
                 case is_string($options['scheduled']):
                     $scheduled = new DateTime($options['scheduled'], new DateTimeZone(date_default_timezone_get()));
@@ -400,10 +336,11 @@ class DoctrineQueue extends AbstractQueue implements DoctrineQueueInterface
      */
     protected function purge()
     {
-        if ($this->getBuriedLifetime() > static::LIFETIME_UNLIMITED) {
-            $buriedLifetime = $this->parseOptionsToDateTime(array('delay' => - ($this->getBuriedLifetime() * 60)));
+        if ($this->options->getBuriedLifetime() > static::LIFETIME_UNLIMITED) {
+            $options = array('delay' => - ($this->options->getBuriedLifetime() * 60));
+            $buriedLifetime = $this->parseOptionsToDateTime($options);
 
-            $this->dm->createQueryBuilder( $this->document )
+            $this->dm->createQueryBuilder( $this->options->getDocument() )
                 ->remove()
                 ->field('finished')->lt($buriedLifetime)
                 ->field('status')->equals(static::STATUS_BURIED)
@@ -413,10 +350,11 @@ class DoctrineQueue extends AbstractQueue implements DoctrineQueueInterface
                 ->getQuery()->execute();
         }
 
-        if ($this->getDeletedLifetime() > static::LIFETIME_UNLIMITED) {
-            $deletedLifetime = $this->parseOptionsToDateTime(array('delay' => - ($this->getDeletedLifetime() * 60)));
+        if ($this->options->getDeletedLifetime() > static::LIFETIME_UNLIMITED) {
+            $options = array('delay' => - ($this->options->getDeletedLifetime() * 60));
+            $deletedLifetime = $this->parseOptionsToDateTime($options);
 
-            $this->dm->createQueryBuilder( $this->document )
+            $this->dm->createQueryBuilder( $this->options->getDocument() )
                 ->remove()
                 ->field('finished')->lt($deletedLifetime)
                 ->field('status')->equals(static::STATUS_DELETED)

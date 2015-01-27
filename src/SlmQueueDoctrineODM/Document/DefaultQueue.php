@@ -5,12 +5,12 @@ namespace SlmQueueDoctrineODM\Document;
 use Doctrine\ODM\MongoDB\Mapping\Annotations as ODM;
 
 /**
- * @ODM\Document(db="Tasks",
+ * @ODM\Document(db="QueueDefault",
  * collection={
- *   "name"="tasks"
+ *   "name"="queue_default"
  * })
  */
-class Task {
+class DefaultQueue {
 
     /** @ODM\Id */
     protected $id;
@@ -45,7 +45,7 @@ class Task {
         $this->status = $status;
     }
 
-     /**
+    /**
      * Set created date
      *
      * @param \MongoDate $created
@@ -54,7 +54,7 @@ class Task {
         $this->created = $created;
     }
 
-     /**
+    /**
      * Set scheduled date
      *
      * @param \MongoDate $scheduled
@@ -116,7 +116,7 @@ class Task {
         return $this->$property;
     }
 
-     /**
+    /**
      * Magic setter to save private properties
      *
      * @param string $property

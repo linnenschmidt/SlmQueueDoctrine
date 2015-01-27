@@ -2,9 +2,10 @@
 
 namespace SlmQueueDoctrineODM\Factory;
 
+use SlmQueueDoctrineODM\Options\DoctrineOptions;
+use SlmQueueDoctrineODM\Queue\DoctrineQueue;
 use Zend\ServiceManager\FactoryInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
-use SlmQueueDoctrineODM\Queue\DoctrineQueue;
 
 /**
  * DoctrineQueueFactory
@@ -18,25 +19,16 @@ class DoctrineQueueFactory implements FactoryInterface
     {
         $parentLocator = $serviceLocator->getServiceLocator();
 
-        /** @var $DoctrineOptions \SlmQueueDoctrineODM\Options\DoctrineOptions */
-        $DoctrineOptions = $parentLocator->get('SlmQueueDoctrineODM\Options\DoctrineOptions');
+        $config        = $parentLocator->get('Config');
+        $queuesOptions = $config['slm_queue']['queues'];
+        $options       = isset($queuesOptions[$requestedName]) ? $queuesOptions[$requestedName] : array();
+        $queueOptions  = new DoctrineOptions($options);
 
-        /** @var $dm \Doctrine\ODM\MongoDB\DocumentManager */
-        $documentManager  = $parentLocator->get($DoctrineOptions->getDocumentManager());
-        $document         = $DoctrineOptions->getDocument();
+        /** @var $documentManager \Doctrine\ODM\MongoDB\DocumentManager */
+        $documentManager  = $parentLocator->get($queueOptions->getDocumentManager());
         $jobPluginManager = $parentLocator->get('SlmQueue\Job\JobPluginManager');
 
-        $queue = new DoctrineQueue($documentManager, $document, $requestedName, $jobPluginManager);
-
-        $config = $parentLocator->get('Config');
-        $options = isset($config['slm_queue']['queues'][$requestedName]) ? $config['slm_queue']['queues'][$requestedName] : array();
-
-        if (isset($options['sleep_when_idle'])) {
-            $queue->setSleepWhenIdle($options['sleep_when_idle']);
-        }
-
-        $queue->setBuriedLifetime($DoctrineOptions->getBuriedLifetime());
-        $queue->setDeletedLifetime($DoctrineOptions->getDeletedLifetime());
+        $queue = new DoctrineQueue($documentManager, $queueOptions, $requestedName, $jobPluginManager);
 
         return $queue;
     }

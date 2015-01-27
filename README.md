@@ -5,7 +5,7 @@ Migrated from SlmQueueDoctrine by Florian Linnenschmidt
 
 Version
 ------------
-0.1.0-dev
+0.2.0-dev
 
 Requirements
 ------------
@@ -128,8 +128,8 @@ return array(
 
 The following options can be set per queue ;
 
-- connection (defaults to 'doctrine.documentmanager.odm_default') : Name of the registered doctrine connection service
-- document (defaults to 'SlmQueueDoctrineODM\Document\Task') : Document class which should be used to store jobs
+- document_manager (defaults to 'doctrine.documentmanager.odm_default') : Name of the registered doctrine connection service
+- document (defaults to 'SlmQueueDoctrineODM\Document\QueueDefault') : Document class which should be used to store jobs
 - delete_lifetime (defaults to 0) : How long to keep deleted (successful) jobs (in minutes)
 - buried_lifetime (defaults to 0) : How long to keep buried (failed) jobs (in minutes)
 - sleep_when_idle (defaults to 1) : How long show we sleep when no jobs available for processing (in seconds)
@@ -208,7 +208,7 @@ Interact with workers from the command line from within the public folder of you
 #### Starting a worker
 Start a worker that will keep monitoring a specific queue for jobs scheduled to be processed. This worker will continue until it has reached certain criteria (exceeds a memory limit or has processed a specified number of jobs).
 
-`php index.php queue doctrine-odm <queueName> --start`
+`php index.php queue doctrine <queueName> --start`
 
 A worker will exit when you press cntr-C *after* it has finished the current job it is working on. (PHP doesn't support signal handling on Windows)
 
