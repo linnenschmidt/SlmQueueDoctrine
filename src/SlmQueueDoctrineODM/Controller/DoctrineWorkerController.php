@@ -2,15 +2,16 @@
 
 namespace SlmQueueDoctrineODM\Controller;
 
-use SlmQueueDoctrineODM\Queue\DoctrineODMQueueInterface;
-use SlmQueue\Controller\Exception\WorkerProcessException;
+
 use SlmQueue\Controller\AbstractWorkerController;
+use SlmQueue\Controller\Exception\WorkerProcessException;
 use SlmQueue\Exception\ExceptionInterface;
+use SlmQueueDoctrineODM\Queue\DoctrineQueueInterface;
 
 /**
  * Worker controller
  */
-class DoctrineODMWorkerController extends AbstractWorkerController
+class DoctrineWorkerController extends AbstractWorkerController
 {
     /**
      * Recover long running jobs
@@ -26,7 +27,7 @@ class DoctrineODMWorkerController extends AbstractWorkerController
         $queueManager = $this->getServiceLocator()->get('SlmQueue\Queue\QueuePluginManager');
         $queue        = $queueManager->get($queueName);
 
-        if (!$queue instanceof DoctrineODMQueueInterface) {
+        if (!$queue instanceof DoctrineQueueInterface) {
             return sprintf("\nQueue % does not support the recovering of job\n\n", $queueName);
         }
 

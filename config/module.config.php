@@ -3,36 +3,35 @@
 return array(
     'service_manager' => array(
         'factories' => array(
-            'SlmQueueDoctrineODM\Options\DoctrineODMOptions'  => 'SlmQueueDoctrineODM\Factory\DoctrineODMOptionsFactory',
-            'SlmQueueDoctrineODM\Worker\DoctrineODMWorker'    => 'SlmQueueDoctrineODM\Factory\DoctrineODMWorkerFactory',
+            'SlmQueueDoctrineODM\Worker\DoctrineWorker'    => 'SlmQueue\Factory\WorkerFactory',
         )
     ),
 
     'controllers' => array(
         'factories' => array(
-            'SlmQueueDoctrineODM\Controller\DoctrineODMWorkerController' => 'SlmQueueDoctrineODM\Factory\DoctrineODMWorkerControllerFactory',
+            'SlmQueueDoctrineODM\Controller\DoctrineWorkerController' => 'SlmQueueDoctrineODM\Factory\DoctrineWorkerControllerFactory',
         ),
     ),
 
     'console'   => array(
         'router' => array(
             'routes' => array(
-                'slm-queue-doctrine-odm-worker' => array(
+                'slm-queue-doctrine-worker' => array(
                     'type'    => 'Simple',
                     'options' => array(
-                        'route'    => 'queue doctrine-odm <queue> [--timeout=] --start',
+                        'route'    => 'queue doctrine <queue> [--timeout=] --start',
                         'defaults' => array(
-                            'controller' => 'SlmQueueDoctrineODM\Controller\DoctrineODMWorkerController',
+                            'controller' => 'SlmQueueDoctrineODM\Controller\DoctrineWorkerController',
                             'action'     => 'process'
                         ),
                     ),
                 ),
-                'slm-queue-doctrine-odm-recover' => array(
+                'slm-queue-doctrine-recover' => array(
                     'type'    => 'Simple',
                     'options' => array(
-                        'route'    => 'queue doctrine-odm <queue> --recover [--executionTime=]',
+                        'route'    => 'queue doctrine <queue> --recover [--executionTime=]',
                         'defaults' => array(
-                            'controller' => 'SlmQueueDoctrineODM\Controller\DoctrineODMWorkerController',
+                            'controller' => 'SlmQueueDoctrineODM\Controller\DoctrineWorkerController',
                             'action'     => 'recover'
                         ),
                     ),
@@ -40,13 +39,33 @@ return array(
             ),
         ),
     ),
-
     'slm_queue' => array(
-        'doctrine' => array(
-            'documentmanager' => 'doctrine.documentmanager.odm_default',
-            'document' => 'SlmQueueDoctrineODM\Document\Task',
-            'buried_lifetime' => -1, // Stay alive
-            'deleted_lifetime' => 60, // Delete after 60 minute
+
+        /**
+         * Queues
+         */
+        'queues' => array(),
+
+        /**
+         * Worker Strategies
+         */
+        'worker_strategies' => array(
+            'default' => array(
+                'SlmQueueDoctrineODM\Strategy\IdleNapStrategy' => array('nap_duration' => 1),
+                'SlmQueueDoctrineODM\Strategy\ClearObjectManagerStrategy'
+            ),
+            'queues' => array(
+            ),
+        ),
+        /**
+         * Strategy manager configuration
+         */
+        'strategy_manager' => array(
+            'invokables' => array(
+                'SlmQueueDoctrineODM\Strategy\IdleNapStrategy' => 'SlmQueueDoctrineODM\Strategy\IdleNapStrategy',
+                'SlmQueueDoctrineODM\Strategy\ClearObjectManagerStrategy'
+                => 'SlmQueueDoctrineODM\Strategy\ClearObjectManagerStrategy'
+            )
         ),
     ),
 );

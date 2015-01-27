@@ -13,7 +13,8 @@ class Module implements
     Feature\AutoloaderProviderInterface,
     Feature\ConfigProviderInterface,
     Feature\ConsoleBannerProviderInterface,
-    Feature\ConsoleUsageProviderInterface
+    Feature\ConsoleUsageProviderInterface,
+    Feature\DependencyIndicatorInterface
 {
     /**
      * {@inheritDoc}
@@ -42,7 +43,7 @@ class Module implements
      */
     public function getConsoleBanner(AdapterInterface $console)
     {
-        return 'SlmQueueDoctrineODM ' . Version::VERSION;
+        return 'SlmQueueDoctrineODM';
     }
 
     /**
@@ -51,8 +52,8 @@ class Module implements
     public function getConsoleUsage(AdapterInterface $console)
     {
         return array(
-            'queue doctrine-odm <queueName> --start' => 'Process the jobs',
-            'queue doctrine-odm <queueName> --recover [--executionTime=]' => 'Recover long running jobs',
+            'queue doctrine <queueName> --start' => 'Process the jobs',
+            'queue doctrine <queueName> --recover [--executionTime=]' => 'Recover long running jobs',
 
             array('<queueName>', 'Queue\'s name to process'),
             array('<executionTime>', 'Time (in minutes) after which the job gets recovered'),
@@ -60,15 +61,10 @@ class Module implements
     }
 
     /**
-     * This ModuleManager feature was introduced in ZF 2.1 to check if all the dependencies needed by a module
-     * were correctly loaded. However, as we want to keep backward-compatibility with ZF 2.0, please DO NOT
-     * explicitely implement Zend\ModuleManager\Feature\DependencyIndicatorInterface. Just write this method and
-     * the module manager will automatically call it
-     *
-     * @return array
+     * {@inheritDoc}
      */
     public function getModuleDependencies()
     {
-        return array('DoctrineModule', 'DoctrineMongoODMModule', 'SlmQueue');
+        return array('DoctrineMongoODMModule', 'SlmQueue');
     }
 }

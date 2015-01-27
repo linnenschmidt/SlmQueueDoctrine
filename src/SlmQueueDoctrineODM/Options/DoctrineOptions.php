@@ -2,41 +2,41 @@
 
 namespace SlmQueueDoctrineODM\Options;
 
-use SlmQueueDoctrineODM\Queue\DoctrineODMQueue;
+use SlmQueueDoctrineODM\Queue\DoctrineQueue;
 use Zend\Stdlib\AbstractOptions;
 
 /**
- * DoctrineODMOptions
+ * DoctrineOptions
  */
-class DoctrineODMOptions extends AbstractOptions
+class DoctrineOptions extends AbstractOptions
 {
     /**
      * documentManager service which should be used
      *
      * @var string
      */
-    protected $dm;
+    protected $documentManager = 'doctrine.documentmanager.odm_default';
 
     /**
      * Document which should be used to store jobs
      *
      * @var string
      */
-    protected $document;
+    protected $document = 'SlmQueueDoctrineODM\Document\QueueDefault';
 
     /**
      * how long to keep deleted (successful) jobs (in minutes)
      *
      * @var int
      */
-    protected $deletedLifetime = DoctrineODMQueue::LIFETIME_DISABLED;
+    protected $deletedLifetime = DoctrineQueue::LIFETIME_DISABLED;
 
     /**
      * how long to keep buried (failed) jobs (in minutes)
      *
      * @var int
      */
-    protected $buriedLifetime = DoctrineODMQueue::LIFETIME_DISABLED;
+    protected $buriedLifetime = DoctrineQueue::LIFETIME_DISABLED;
 
     /**
      * Set the name of the doctrine documentManager service
@@ -46,7 +46,7 @@ class DoctrineODMOptions extends AbstractOptions
      */
     public function setDocumentManager($documentManager)
     {
-        $this->dm = $documentManager;
+        $this->documentManager = $documentManager;
     }
 
     /**
@@ -56,7 +56,7 @@ class DoctrineODMOptions extends AbstractOptions
      */
     public function getDocumentManager()
     {
-        return $this->dm;
+        return $this->documentManager;
     }
 
     /**

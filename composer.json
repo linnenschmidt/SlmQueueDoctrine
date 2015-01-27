@@ -17,7 +17,7 @@
         "php": ">=5.3.3",
         "zendframework/zendframework": "2.*",
         "doctrine/doctrine-mongo-odm-module": "dev-master",
-        "slm/queue": ">=0.3.0-dev"
+        "slm/queue": "~0.4.0"
     },
     "autoload": {
         "psr-0": {
